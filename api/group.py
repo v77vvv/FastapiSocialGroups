@@ -44,14 +44,14 @@ async def get_list(
                                                                   Group.id==GroupUser.group))
     return result.scalars().all()
 
-@router.put('/', response_model=GroupResponseScheme, tags=['Group'])
+@router.put('/{id_}', response_model=GroupResponseScheme, tags=['Group'])
 async def put(
-        group_id: int,
+        id_: int,
         scheme: GroupCreateScheme,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Group).where(Group.id==group_id, 
+    result = await db.execute(select(Group).where(Group.id==id_, 
                                                   Group.owner==current_user['id']))
     scalar = result.scalar_one_or_none()
 

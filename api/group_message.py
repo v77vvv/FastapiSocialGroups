@@ -46,13 +46,16 @@ async def get_list(
     )
     return result.scalars().all()
 
-@router.put('/', response_model=GroupMessageResponseScheme, tags=['Group Message'])
+@router.put('/{id_}', response_model=GroupMessageResponseScheme, tags=['Group Message'])
 async def put(
+        id_: int,
         scheme: GroupMessageUpdateScheme,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(GroupMessage).where(GroupMessage.user==current_user['id']))
+    result = await db.execute(
+        select(GroupMessage).where(GroupMessage.id == id_, GroupMessage.user == current_user['id'])
+    )
     scalar = result.scalar_one_or_none()
 
     if not scalar:
