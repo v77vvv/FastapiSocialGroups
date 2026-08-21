@@ -5,7 +5,7 @@ from database.connection import get_db
 from sqlalchemy import select
 from handlers.social_auth import get_current_user
 from database.schemes import GroupResponseScheme, GroupCreateScheme
-from database.models import Group
+from database.models import Group, GroupUser
 
 router = APIRouter(prefix='/group', tags=['Group'])
 
@@ -15,7 +15,8 @@ async def post(
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Group).where(Group.name==scheme.name))
+    result = await db.execute(select(Group).where(Group.name==scheme.name,
+                                                  Group.owner==current_user['id']))
     scalar = result.scalar_one_or_none()
 
     if scalar:
@@ -23,6 +24,11 @@ async def post(
                             detail='Group with this name already exists')
 
     group = Group(owner=current_user['id'], **scheme.model_dump())
+
+    group_user = GroupUser(group=group.id, user=current_user['id'])
+
+    db.add(group_user)
+    await db.commit()
 
     db.add(group)
     await db.commit()

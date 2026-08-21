@@ -5,7 +5,7 @@ from database.connection import get_db
 from sqlalchemy import select
 from handlers.social_auth import get_current_user
 from database.schemes import GroupUserCreateScheme, GroupUserResponseScheme
-from database.models import GroupUser
+from database.models import GroupUser, Group
 
 router = APIRouter(prefix='/group_user', tags=['Group User'])
 
@@ -14,7 +14,13 @@ async def post(
         scheme: GroupUserCreateScheme,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
-):
+):  
+    group_res = await db.execute(select(Group).where(Group.id==scheme.group))
+    
+    if not group_res.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Group not found")
+
     result = await db.execute(
         select(GroupUser).where(GroupUser.group==scheme.group,
                                 GroupUser.user==current_user['id'])
