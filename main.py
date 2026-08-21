@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 import uvicorn
-from api import group, group_user, group_message
+from api import group, group_user, group_message, ws
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title='Social Stories')
 app.include_router(group.router)
 app.include_router(group_message.router)
 app.include_router(group_user.router)
+app.include_router(ws.router)
 
 origins = [
     'http://localhost:3000'

@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Annotated
 
 async def verify_access_token(token: str):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=3.0) as client:
         try:
             response = await client.get(
                 f'{settings.SOCIAL_AUTH_URL}/profile/',

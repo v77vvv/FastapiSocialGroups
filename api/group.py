@@ -9,30 +9,38 @@ from database.models import Group, GroupUser
 
 router = APIRouter(prefix='/group', tags=['Group'])
 
+
 @router.post('/', response_model=GroupResponseScheme, tags=['Group'])
 async def post(
         scheme: GroupCreateScheme,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Group).where(Group.name==scheme.name,
-                                                  Group.owner==current_user['id']))
+    result = await db.execute(
+        select(Group).where(
+            Group.name == scheme.name,
+            Group.owner == current_user['id']
+        )
+    )
     scalar = result.scalar_one_or_none()
 
     if scalar:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='Group with this name already exists')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Group with this name already exists'
+        )
 
     group = Group(owner=current_user['id'], **scheme.model_dump())
+    db.add(group)
+
+    await db.flush()
 
     group_user = GroupUser(group=group.id, user=current_user['id'])
-
     db.add(group_user)
-    await db.commit()
 
-    db.add(group)
     await db.commit()
     await db.refresh(group)
+
     return group
 
 @router.get('/', response_model=List[GroupResponseScheme], tags=['Group'])
