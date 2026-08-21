@@ -73,7 +73,7 @@ async def chat(ws: WebSocket, group_id: int, access_token: str):
 
     try:
         while True:
-            payload = ws.receive_json()
+            payload = await ws.receive_json()
 
             if isinstance(payload, dict):
                 msg_text = payload.get('message', '').strip()
