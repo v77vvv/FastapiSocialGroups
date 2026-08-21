@@ -40,23 +40,26 @@ async def get_list(
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Group).where(Group.owner==current_user['id']))
+    result = await db.execute(select(Group).join(GroupUser).where(GroupUser.user==current_user['id'],
+                                                                  Group.id==GroupUser.group))
     return result.scalars().all()
 
 @router.put('/', response_model=GroupResponseScheme, tags=['Group'])
 async def put(
+        group_id: int,
         scheme: GroupCreateScheme,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Group).where(Group.owner==current_user['id']))
+    result = await db.execute(select(Group).where(Group.id==group_id, 
+                                                  Group.owner==current_user['id']))
     scalar = result.scalar_one_or_none()
 
     if not scalar:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='U are not owner of this group')
 
-    update_date = scheme.model_dump(exclude_unset=True)
-    for key, value in update_date.items():
+    update_data = scheme.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
         setattr(scalar, key, value)
 
     await db.commit()
