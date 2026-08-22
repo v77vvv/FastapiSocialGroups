@@ -39,7 +39,8 @@ class GroupMessage(Base):
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     group: Mapped[Group] = mapped_column(ForeignKey('group.id', ondelete='CASCADE'), nullable=False)
     user: Mapped[int] = mapped_column(nullable=False)
-    message: Mapped[str] = mapped_column(String(5000), nullable=False)
+    message: Mapped[str] = mapped_column(String(5000), nullable=True)
+    file: Mapped[str] = mapped_column(nullable=True)
     sent_date: Mapped[date] = mapped_column(Date, default=date.today)
 
     message_group: Mapped[Group] = relationship(back_populates='group_message')
